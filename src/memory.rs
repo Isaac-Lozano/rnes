@@ -2,20 +2,30 @@ use r6502::memory::Memory;
 use mapper::Mapper;
 
 const RAM_SIZE: usize = 0x0800;
-const IO_SIZE: usize = 0x0008;
+const LOW_IO_SIZE: usize = 0x0008;
 const SRAM_SIZE: usize = 0x2000;
 
-pub struct NESMemory<M>
+const PPUCTRL: u16 = 0x2000;
+const PPUMASK: u16 = 0x2000;
+const PPUSTATUS: u16 = 0x2000;
+const OAMADDR: u16 = 0x2000;
+const OAMDATA: u16 = 0x2000;
+const PPUSCROLL: u16 = 0x2000;
+const PPUADDR: u16 = 0x2000;
+const PPUDATA: u16 = 0x2000;
+
+pub struct NesMemory<M>
 {
+//    ppu: Ppu,
     ram: [u8; RAM_SIZE],
     mapper: M
 }
 
-impl<M> NESMemory<M> where M: Mapper
+impl<M> NesMemory<M> where M: Mapper
 {
-    fn new(mapper: M) -> NESMemory<M>
+    fn new(mapper: M) -> NesMemory<M>
     {
-        NESMemory
+        NesMemory
         {
             ram: [0; RAM_SIZE],
             mapper: mapper,
@@ -23,7 +33,7 @@ impl<M> NESMemory<M> where M: Mapper
     }
 }
 
-impl<M> Memory<u8> for NESMemory<M> where M: Mapper
+impl<M> Memory<u8> for NesMemory<M> where M: Mapper
 {
     fn read_without_mm(&mut self, addr: u16) -> u8
     {
@@ -36,6 +46,7 @@ impl<M> Memory<u8> for NESMemory<M> where M: Mapper
             0x2000...0x3fff =>
             {
                 /* TODO: low IO regs */
+                let io_reg = addr % LOW_IO_SIZE as u16;
                 0
             },
             0x4000...0x401f =>
