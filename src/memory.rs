@@ -1,29 +1,22 @@
 use r6502::memory::Memory;
 use mapper::Mapper;
+use ppu::Ppu;
 
 const RAM_SIZE: usize = 0x0800;
 const LOW_IO_SIZE: usize = 0x0008;
 const SRAM_SIZE: usize = 0x2000;
 
-const PPUCTRL: u16 = 0x2000;
-const PPUMASK: u16 = 0x2000;
-const PPUSTATUS: u16 = 0x2000;
-const OAMADDR: u16 = 0x2000;
-const OAMDATA: u16 = 0x2000;
-const PPUSCROLL: u16 = 0x2000;
-const PPUADDR: u16 = 0x2000;
-const PPUDATA: u16 = 0x2000;
-
-pub struct NesMemory<M>
+pub struct NesMemory
 {
-//    ppu: Ppu,
     ram: [u8; RAM_SIZE],
-    mapper: M
+    ppu: Ppu,
+    mapper: Box::<Mapper>
 }
 
-impl<M> NesMemory<M> where M: Mapper
+impl NesMemory
 {
-    fn new(mapper: M) -> NesMemory<M>
+    fn new(mapper: M) -> NesMemory
+        where M: Mapper
     {
         NesMemory
         {
@@ -33,7 +26,7 @@ impl<M> NesMemory<M> where M: Mapper
     }
 }
 
-impl<M> Memory<u8> for NesMemory<M> where M: Mapper
+impl Memory<u8> for NesMemory
 {
     fn read_without_mm(&mut self, addr: u16) -> u8
     {
@@ -45,9 +38,7 @@ impl<M> Memory<u8> for NesMemory<M> where M: Mapper
             },
             0x2000...0x3fff =>
             {
-                /* TODO: low IO regs */
-                let io_reg = addr % LOW_IO_SIZE as u16;
-                0
+                self.ppu.read_without_mm(addr)
             },
             0x4000...0x401f =>
             {
@@ -84,7 +75,7 @@ impl<M> Memory<u8> for NesMemory<M> where M: Mapper
             },
             0x2000...0x3fff =>
             {
-                /* TODO: low IO regs */
+                self.ppu.write_without_mm(addr, val);
             },
             0x4000...0x401f =>
             {
@@ -120,8 +111,7 @@ impl<M> Memory<u8> for NesMemory<M> where M: Mapper
             },
             0x2000...0x3fff =>
             {
-                /* TODO: low IO regs */
-                0
+                self.ppu.read(addr)
             },
             0x4000...0x401f =>
             {
@@ -158,7 +148,7 @@ impl<M> Memory<u8> for NesMemory<M> where M: Mapper
             },
             0x2000...0x3fff =>
             {
-                /* TODO: low IO regs */
+                self.ppu.write(addr, val);
             },
             0x4000...0x401f =>
             {
